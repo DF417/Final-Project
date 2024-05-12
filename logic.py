@@ -12,7 +12,8 @@ class Logic(QMainWindow, Ui_MainWindow): #matches gui class
         self.list_sets()
         self.list_flashcards.setCurrentRow(0)
         self.loaded_cards: set = []
-        self.card_side: bool = 0
+        self.current_card: set = []
+        self.card_side: bool = 1
 
         self.button_newset.clicked.connect(lambda : self.create_csv())
         self.button_addto.clicked.connect(lambda : self.add_to())
@@ -94,38 +95,47 @@ class Logic(QMainWindow, Ui_MainWindow): #matches gui class
                     raise TypeError
                 elif not lines:
                     raise ValueError
+        
         except TypeError:
             self.label_display.setText('Error reading set')
         except ValueError:
             self.label_display.setText('Set empty')
         except FileNotFoundError:
             self.label_display.setText('No such file')
+        
         else:
             while lines:
                 random_card = lines.pop(random.randint(0,len(lines)-1))
                 shuffled_cards.append(random_card)
             
             self.loaded_cards = shuffled_cards
-            self.card_side = 0
-            self.display_cards()
+            self.card_side = 1
+            self.next_card()
                 
     def display_cards(self) -> None:
         '''
         Switches between the front and back of a flashcard
         '''
-        self.label_display.setText(loaded)
-        self.button_flip_2.clicked.connect(lambda : self.list_sets())
-        self.label_display.setText(card[1])
-    
+        try:
+            self.card_side = not self.card_side
+            self.label_display.setText(self.current_card[self.card_side])
+
+        except IndexError:
+            self.label_display.setText('No more cards')
+            self.clear_cards()
 
     def next_card(self) -> None:
         '''
         Displays the next card
         '''
-        self.card_side = not self.card_side
-        self.display_cards()
+        try:    
+            card = self.loaded_cards.pop(0)
+            self.current_card = card
+            self.display_cards()
+        except IndexError:
+            self.label_display.setText('No more cards')
+            self.clear_cards()
 
-                    
     def csv_verify(self, header: set) -> bool:
         '''
         Verifies if the CSV file contains the right headers
@@ -133,6 +143,7 @@ class Logic(QMainWindow, Ui_MainWindow): #matches gui class
         '''
         if header[0] != 'Front' and header[1] != 'Back':
             return False
+        
         else:
             return True
     
@@ -146,8 +157,10 @@ class Logic(QMainWindow, Ui_MainWindow): #matches gui class
             if current_row < 0:
                 raise ValueError
             current_selection = self.list_flashcards.item(current_row).text()
+        
         except ValueError:
             print('current_value negative')
+        
         else:
             return current_selection
 
@@ -190,6 +203,13 @@ class Logic(QMainWindow, Ui_MainWindow): #matches gui class
         
         else:
             return False
+        
+    def clear_cards(self) -> None:
+        '''
+        Clears cards from memory
+        '''
+        self.loaded_cards = []
+        self.current_card = []
 
     def delete_set(self) -> None:
         '''
@@ -197,15 +217,16 @@ class Logic(QMainWindow, Ui_MainWindow): #matches gui class
         '''
         selection: str = self.get_selection()
         confirm = self.confirmation()
+        
         try:
             if confirm:
                 os.remove(f'{selection}.csv')
+                self.clear_cards()
                 self.label_display.setText('Flashcards deleted!')
             else:
                 self.label_display.setText('Deletion cancelled')
+
         except FileNotFoundError:
              self.label_display.setText('No file selected')
 
         self.list_sets()
-            
-            
