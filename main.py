@@ -1,6 +1,13 @@
 from logic import *
 
 def main():
+    application=QApplication([])
+    window=Logic()
+    window.show()
+    application.exec()
+
+
+'''
     while True:
         list_sets()
         selection = input('please select what you want:\nPractice sets\nNew set\nadd to set\nDelete set\n(p/n/e/d) ')
@@ -30,6 +37,6 @@ def main():
         
         elif selection == 'd':
             delete_set()
-            
+            '''
 if __name__ == '__main__':
     main()
