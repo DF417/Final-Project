@@ -10,7 +10,7 @@ class Logic(QMainWindow, Ui_MainWindow): #matches gui class
         self.setupUi(self)
 
         self.list_sets()
-        self.list_flashcards.setCurrentRow(0)
+        #self.list_flashcards.setCurrentRow(0)
         self.loaded_cards: set = []
         self.current_card: set = []
         self.card_side: bool = 1
@@ -83,9 +83,10 @@ class Logic(QMainWindow, Ui_MainWindow): #matches gui class
         Opens the selected CSV file, shuffles the contents, and loads the pairs into memory
         '''
         self.label_display.clear()
-        db: str = f'{self.get_selection()}.csv'
+        
         
         try:
+            db: str = f'{self.get_selection()}.csv'
             with open(db, 'r', newline='') as input_file:
                 reader = csv.reader(input_file, delimiter='\t')
                 lines = list(reader)
@@ -102,7 +103,9 @@ class Logic(QMainWindow, Ui_MainWindow): #matches gui class
             self.label_display.setText('Set empty')
         except FileNotFoundError:
             self.label_display.setText('No such file')
-        
+        except IndexError:
+            self.label_display.setText('No set selected')
+
         else:
             while lines:
                 random_card = lines.pop(random.randint(0,len(lines)-1))
@@ -159,8 +162,8 @@ class Logic(QMainWindow, Ui_MainWindow): #matches gui class
             current_selection = self.list_flashcards.item(current_row).text()
         
         except ValueError:
-            print('current_value negative')
-        
+            self.label_display.setText('No set selected')
+            raise IndexError
         else:
             return current_selection
 
@@ -170,14 +173,18 @@ class Logic(QMainWindow, Ui_MainWindow): #matches gui class
         '''
         front: str = self.textedit_front.toPlainText().strip()
         back: str = self.textedit_back.toPlainText().strip()
-        db: str = f'{self.get_selection()}.csv'
+        
 
         try:
+            db: str = f'{self.get_selection()}.csv'
+
             if not front or not back:
                 raise ValueError
         
         except ValueError:
             self.label_display.setText('Cards cannot be empty')
+        except IndexError:
+            self.label_display.setText('Please select a set')
 
         else:
             with open(db, 'a+', newline='') as card_set:
@@ -215,10 +222,9 @@ class Logic(QMainWindow, Ui_MainWindow): #matches gui class
         '''
         Deletes the currently selected set
         '''
-        selection: str = self.get_selection()
-        confirm = self.confirmation()
-        
         try:
+            selection: str = self.get_selection()
+            confirm = self.confirmation()
             if confirm:
                 os.remove(f'{selection}.csv')
                 self.clear_cards()
@@ -227,6 +233,8 @@ class Logic(QMainWindow, Ui_MainWindow): #matches gui class
                 self.label_display.setText('Deletion cancelled')
 
         except FileNotFoundError:
-             self.label_display.setText('No file selected')
+            self.label_display.setText('No file selected')
+        except IndexError:
+            self.label_display.setText('No set selected')
 
         self.list_sets()
