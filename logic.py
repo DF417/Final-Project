@@ -53,7 +53,6 @@ class Logic(QMainWindow, Ui_MainWindow): #matches gui class
             
         except FileExistsError:
             self.label_display.setText('File already exists')
-        
         except NameError:
             self.label_display.setText('Name cannot be blank')
 
@@ -135,6 +134,7 @@ class Logic(QMainWindow, Ui_MainWindow): #matches gui class
             card = self.loaded_cards.pop(0)
             self.current_card = card
             self.display_cards()
+
         except IndexError:
             self.label_display.setText('No more cards')
             self.clear_cards()
@@ -164,6 +164,7 @@ class Logic(QMainWindow, Ui_MainWindow): #matches gui class
         except ValueError:
             self.label_display.setText('No set selected')
             raise IndexError
+        
         else:
             return current_selection
 
