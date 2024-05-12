@@ -71,13 +71,6 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="button_addto">
-         <property name="text">
-          <string>Add to Set</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QPushButton" name="button_delete">
          <property name="text">
           <string>Delete</string>
@@ -118,9 +111,9 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="button_save">
+        <widget class="QPushButton" name="button_addto">
          <property name="text">
-          <string>Save Card</string>
+          <string>Add Card to Set</string>
          </property>
         </widget>
        </item>

@@ -11,14 +11,15 @@ class Logic(QMainWindow, Ui_MainWindow): #matches gui class
 
         self.list_sets()
         self.list_flashcards.setCurrentRow(0)
-        #self.loaded_cards: set = self.load_set()
+        self.loaded_cards: set = []
+        self.card_side: bool = 0
 
         self.button_newset.clicked.connect(lambda : self.create_csv())
         self.button_addto.clicked.connect(lambda : self.add_to())
         self.button_reload.clicked.connect(lambda : self.list_sets())
         self.button_delete.clicked.connect(lambda : self.delete_set())
         self.button_practice.clicked.connect(lambda : self.load_set())
-        self.button_flip_2.clicked.connect(lambda : self.flip_card())
+        self.button_flip_2.clicked.connect(lambda : self.display_cards())
         self.button_next_2.clicked.connect(lambda : self.next_card())
 
     def list_sets(self) -> None:
@@ -78,50 +79,52 @@ class Logic(QMainWindow, Ui_MainWindow): #matches gui class
 
     def load_set(self) -> set:
         '''
-        Opens the selected CSV file and shuffles the contents
-        :return: the selected set in a random order
+        Opens the selected CSV file, shuffles the contents, and loads the pairs into memory
         '''
         self.label_display.clear()
         db: str = f'{self.get_selection()}.csv'
-
-        with open(db, 'r', newline='') as input_file:
-            reader = csv.reader(input_file, delimiter='\t')
-            lines = list(reader)
-            shuffled_cards: set = []
-            try:
+        
+        try:
+            with open(db, 'r', newline='') as input_file:
+                reader = csv.reader(input_file, delimiter='\t')
+                lines = list(reader)
+                shuffled_cards: set = []
+                
                 if not self.csv_verify(lines.pop(0)):
                     raise TypeError
                 elif not lines:
                     raise ValueError
-            except TypeError:
-                self.label_display.setText('Error reading set')
-            except ValueError:
-                self.label_display.setText('Set empty')
-            else:
-                while lines:
-                    random_card = lines.pop(random.randint(0,len(lines)-1))
-                    shuffled_cards.append(random_card)
-            return shuffled_cards
+        except TypeError:
+            self.label_display.setText('Error reading set')
+        except ValueError:
+            self.label_display.setText('Set empty')
+        except FileNotFoundError:
+            self.label_display.setText('No such file')
+        else:
+            while lines:
+                random_card = lines.pop(random.randint(0,len(lines)-1))
+                shuffled_cards.append(random_card)
+            
+            self.loaded_cards = shuffled_cards
+            self.card_side = 0
+            self.display_cards()
                 
-    def flip_card(self) -> None:
+    def display_cards(self) -> None:
         '''
         Switches between the front and back of a flashcard
         '''
-        pass
-        '''
-        self.label_display.setText(card[0])
-        next_card: bool = False
-
-        while not next_card:
-            self.button_flip_2.clicked.connect(lambda : self.list_sets())
-            self.label_display.setText(card[1])
-        '''
+        self.label_display.setText(loaded)
+        self.button_flip_2.clicked.connect(lambda : self.list_sets())
+        self.label_display.setText(card[1])
+    
 
     def next_card(self) -> None:
         '''
         Displays the next card
         '''
-        pass
+        self.card_side = not self.card_side
+        self.display_cards()
+
                     
     def csv_verify(self, header: set) -> bool:
         '''
@@ -138,9 +141,15 @@ class Logic(QMainWindow, Ui_MainWindow): #matches gui class
         gets the name of the currently hightlighted set
         :return: the name of the currently hightlighted set
         '''
-        current_row: int = self.list_flashcards.currentRow()
-        current_selection = self.list_flashcards.item(current_row).text()
-        return current_selection
+        try:
+            current_row: int = self.list_flashcards.currentRow()
+            if current_row < 0:
+                raise ValueError
+            current_selection = self.list_flashcards.item(current_row).text()
+        except ValueError:
+            print('current_value negative')
+        else:
+            return current_selection
 
     def add_to(self) -> None:
         '''
@@ -163,6 +172,8 @@ class Logic(QMainWindow, Ui_MainWindow): #matches gui class
                 writer.writerow({'Front': front, 'Back': back})
 
             self.label_display.setText(f'Card {front} added to set!')
+            self.textedit_front.clear()
+            self.textedit_back.clear()
 
     def confirmation(self) -> bool:
         '''
@@ -186,12 +197,15 @@ class Logic(QMainWindow, Ui_MainWindow): #matches gui class
         '''
         selection: str = self.get_selection()
         confirm = self.confirmation()
+        try:
+            if confirm:
+                os.remove(f'{selection}.csv')
+                self.label_display.setText('Flashcards deleted!')
+            else:
+                self.label_display.setText('Deletion cancelled')
+        except FileNotFoundError:
+             self.label_display.setText('No file selected')
 
-        if confirm:
-            os.remove(f'{selection}.csv')
-            self.label_display.setText('Flashcards deleted!')
-        else:
-            self.label_display.setText('Deletion cancelled')
         self.list_sets()
             
             
