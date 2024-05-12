@@ -11,7 +11,7 @@ class Logic(QMainWindow, Ui_MainWindow): #matches gui class
 
         self.list_sets()
         self.list_flashcards.setCurrentRow(0)
-        self.loaded_cards: set = self.load_set()
+        #self.loaded_cards: set = self.load_set()
 
         self.button_newset.clicked.connect(lambda : self.create_csv())
         self.button_addto.clicked.connect(lambda : self.add_to())
